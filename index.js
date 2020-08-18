@@ -1,3 +1,18 @@
+const express = require("express")
+const projectsRouter = require("./routers/projects-router")
+const actionsRouter = require("./routers/action-router")
+
+const server = express()
+const port = process.env.PORT || 4010
+
+server.use(express.json())
+
+server.use(projectsRouter)
+server.use(actionsRouter)
+
+server.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`)
+})
 /*
 play this: https://www.youtube.com/watch?v=d-diB65scQU
 

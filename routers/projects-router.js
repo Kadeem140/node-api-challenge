@@ -21,14 +21,14 @@ router.get("/projects", (req, res) => {
 router.get("/projects/:id", (req, res) => {
     projects.get(req.params.id)
         .then((project) => {
-            req.params.id ? es.status(200).json(project) :
+            req.params.id ? res.status(200).json(project) :
                 res.status(404).json({
                 message: "There doesn't seem to be an project linked to this ID"
             })
         })
         .catch((error) => {
             res.status(500).json({
-                message: "The information could not be found about this actions"
+                message: "The information could not be found about this project"
             })
         })
         
@@ -36,7 +36,7 @@ router.get("/projects/:id", (req, res) => {
 
 
 //(DELETE)Delete PROJECT BY id
-router.get("/projects/:id", (req, res) => {
+router.delete("/projects/:id", (req, res) => {
     projects.remove(req.params.id)
         .then((project) => {
             !req.params.id ? res.status(404).json({
@@ -44,7 +44,6 @@ router.get("/projects/:id", (req, res) => {
             }) : res.status(200).json({
                 message: "Project successfully deleted"
             })
-
         })
         .catch(() => {
             console.log("Project Delete error",err)
@@ -57,7 +56,7 @@ router.get("/projects/:id", (req, res) => {
 })
 
 //(PUT) EDIT PROJECT BY id
-router.get("/projects/:id", (req, res) => {
+router.put("/projects/:id", (req, res) => {
     projects.get(req.params.id)
         .then((project) => {
             if (!req.body.name || !req.body.description) {
@@ -87,40 +86,19 @@ router.get("/projects/:id", (req, res) => {
 })
 
 //(POST)Create new PROJECT
-router.get("/projects", (req, res) => {
-    projects.get(req.params.id)
-        .then((project) => {
-            projects
-            .get(req.params.id)
+router.post("/projects",(req, res) => {
+        projects
+            .insert(req.body)
             .then((project) => {
-                if (!req.body.name || !req.body.description) {
-                    res.status(400).json({
-                        message: "Please fill out all fields",
-                    })
-                } else {
-                    projects
-                        .insert(req.body)
-                        .then((project) => {
-                            res.status(201).json(project)
-                        })
-                        .catch((err) => {
-                            console.log(err)
-                            res.status(500).json({
-                                message: "Error adding the project",
-                            })
-                        })
-                }
+                res.status(201).json(project)
             })
-
-
-        })
-        .catch((error) => {
-            console.log(error)
-            res.status(500).json({
-                message: "Error adding the Project"
+            .catch((err) => {
+                console.log(err)
+                res.status(500).json({
+                    message: "Error adding the project",
+                })
             })
-            
-        })
 })
+       
 
 module.exports = router

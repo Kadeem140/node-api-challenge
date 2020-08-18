@@ -7,6 +7,7 @@ const router = express.Router()
 router.get("/actions", (req, res) => {
     actions.get()
         .then((action) => {
+            console.log("Action", action)
             res.status(200).json(action)
         })
         .catch((err) => {  
@@ -19,9 +20,10 @@ router.get("/actions", (req, res) => {
 
 //(GET)Get Action by ID
 router.get("/actions/:id", (req, res) => {
-    actions.get(req.param.id)
+    actions.get(req.params.id)
         .then((action) => {
-            if(req.param.id){
+            console.log()
+            if(req.params.id){
                 res.status(200).json(action)
             }else {
                 res.status(404).json({
@@ -29,7 +31,7 @@ router.get("/actions/:id", (req, res) => {
                 })
             }
         })
-        .catch(() => {
+        .catch((error) => {
             res.status(500).json({
                 message: "The information could not be found about this actions"
             })
@@ -38,7 +40,7 @@ router.get("/actions/:id", (req, res) => {
 
 //(DELETE)Delete Action BY id
 router.delete("/actions/:id", (req, res) => {
-    actions.remove(req.param.id)
+    actions.remove(req.params.id)
         .then((action) => {
              !req.params.id ? res.status(404).json({
                 message: "Specified action doesn't exist"
@@ -66,7 +68,7 @@ router.put("/actions/:id", (req, res) => {
                 actions
                     .update(req.params.id, req.body)
                     .then((action) => {
-                        res.status(200).json(req.body)
+                        res.status(201).json(req.body)
                     })
                     .catch((err) => {
                         console.log(err)
@@ -86,37 +88,58 @@ router.put("/actions/:id", (req, res) => {
 })
 
 //(POST)Create new Action
-router.post("/actions/:id", (req, res) => {
-    actions.get(req.params.id)
-        .then((action) => {
-            actions
-            .get(req.params.id)
+router.post("/actions",(req, res) => {
+        actions
+            .insert(req.body)
             .then((action) => {
-                if (!req.body.project_id || !req.body.description || req.body.completed) {
-                    res.status(400).json({
-                        message: "Please fill out all fields",
-                    })
-                } else {
-                    actions
-                        .insert(req.body)
-                        .then((action) => {
-                            res.status(201).json(action)
-                        })
-                        .catch((err) => {
-                            console.log(err)
-                            res.status(500).json({
-                                message: "Error adding the action",
-                            })
-                        })
-                }
+                res.status(201).json(action)
+            })
+            .catch((err) => {
+                console.log(err)
+                res.status(500).json({
+                    message: "Error adding the action???",
+                })
             })
         })
-        .catch((error) => {
-            console.log(error)
-            res.status(500).json({
-                message: "Error adding the action",
-            })
-        })
-})
+            
+        
 
+    //middleware
+    function validateAction(req, res, next) {
+        const body = req.body;
+        // const notes = body.notes;
+        const description = body.description;
+      
+        if (!body) {
+          res.status(400).json({ message: "missing action data" });
+        } else if (!description) {
+          res.status(400).json({ message: "missing required description field" });
+        }  else {
+          next();
+        }
+      }
+      
+      function validateActionId(req, res, next) {
+        const id = req.params.id;
+      
+        actionsDb
+          .get(id)
+          .then(action => {
+            if (action) {
+              // attach value to my request
+              req.body = action;
+      
+              // moving to next middleware in call stack
+              next();
+            } else {
+              res.status(400).json({ message: "invalid action id" });
+            }
+          })
+          .catch(err => {
+            console.log(err);
+            res.status(500).json({
+              message: "Could not make request"
+            });
+          });
+      }
 module.exports = router
